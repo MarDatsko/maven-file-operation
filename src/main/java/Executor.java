@@ -5,26 +5,33 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class Execute {
-    private String mainPath = "src/main/resources/data.txt";
-    private String smallWordsPath = "src/main/resources/smallWords.txt";
-    private String content = readWithFile(mainPath);
-    private static long smallWordsCounter = 0;
-    private Set<String> badWords = new LinkedHashSet<>();
+public class Executor {
+    private final String pathToFile = "src/main/resources/data.txt";
+    private final String pathToSmallWordsFile = "src/main/resources/smallWords.txt";
+    private final int minWordLength = 3;
+    private String content = read(pathToFile);
+    private static long wordToAmount = 0;
+    private Set<String> smallWords = new LinkedHashSet<>();
     private Map<String, Integer> goodWords = new TreeMap<>();
 
     public void run() {
         cleanText();
-        System.out.println("The total number of words - " + countingTotalNumberOfWords());
+
+        printTotalNumberOfWords();
+
         writeSmallWordsInAnotherArray();
-        System.out.println("Quantity small words - " + smallWordsCounter);
+
+        System.out.println("Quantity small words - " + wordToAmount);
+
         printMostFrequentlyWords();
-        writeIntoFile();
+
+        write(pathToSmallWordsFile);
     }
 
     private void printMostFrequentlyWords() {
         Integer max = 0;
         String str = null;
+        //Integer integer = goodWords.entrySet().stream().map(Map.Entry::getValue).max(Integer::compareTo).get();
         for (var item : goodWords.entrySet()) {
             if (item.getValue() >= max) {
                 max = item.getValue();
@@ -35,22 +42,22 @@ public class Execute {
     }
 
     private void writeSmallWordsInAnotherArray() {
-        String[] splitString = splitString();
-        for (var item : splitString) {
-            if (item.length() < 3) {
-                addBadWordsToArray(item);
+        String[] stringArray = splitString();
+        for (var item : stringArray) {
+            if (item.length() < minWordLength) {
+                addSmallWordsToArray(item);
             } else {
-                addGoodWordsTOArray(item);
+                addGoodWordsToArray(item);
             }
         }
     }
 
-    private void addGoodWordsTOArray(String item) {
-        if (goodWords.containsKey(item)) {
-            Integer i = 1 + goodWords.get(item);
-            goodWords.put(item, i);
+    private void addGoodWordsToArray(String word) {
+        if (goodWords.containsKey(word)) {
+            Integer wordAmount = goodWords.get(word);
+            goodWords.put(word, ++wordAmount);
         } else {
-            goodWords.put(item, 1);
+            goodWords.put(word, 1);
         }
     }
 
@@ -61,33 +68,37 @@ public class Execute {
         content = content.toLowerCase();
     }
 
-    private void addBadWordsToArray(String item) {
-        smallWordsCounter++;
-        badWords.add(item);
+    private void addSmallWordsToArray(String item) {
+        wordToAmount++;
+        smallWords.add(item);
     }
 
     private String[] splitString() {
         return content.split(" ");
     }
 
-    private Integer countingTotalNumberOfWords() {
-        return splitString().length;
+    private void printTotalNumberOfWords() {
+        System.out.println("The total number of words - " + content.split(" ").length);
     }
 
-    private String readWithFile(String path) {
+    private String read(String path) {
         Path filePath = Paths.get(path);
         String content = null;
+
         try {
             content = Files.readString(filePath);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         return content;
     }
 
-    private void writeIntoFile() {
+    private void write(String path) {
+        Path filePath = Paths.get(path);
+
         try {
-            Files.write(Paths.get(smallWordsPath), badWords, StandardCharsets.UTF_8);
+            Files.write(filePath, smallWords, StandardCharsets.UTF_8);
         } catch (IOException e) {
             e.printStackTrace();
         }
